@@ -1,0 +1,143 @@
+<style lang="less">
+.home {
+  .banner {
+    .slide-image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .weather-info {
+    color: #fff;
+    font-size: 28rpx;
+    background: #228b22;
+    padding: 10px;
+    padding-bottom: 0;
+    margin: 10px;
+    opacity:0.78;
+    .weather-tem {
+      font-size: 60rpx;
+      text {
+        font-size: 24rpx;
+      }
+    }
+    .weather-sug {
+      font-size: 24rpx;
+      text-align: center;
+      padding-bottom: 10px;
+      margin-top: 20px;
+    }
+    .weather-recent {
+      font-size: 30rpx;
+      text-align: center;
+      padding-bottom: 10px;
+      margin-top: 10px;
+    }
+  }
+  .movie-info {
+    margin: 10px;
+    .location {
+      font-size: 14px;
+      position: relative;
+      button {
+        display: inline-block;
+        font-size: 14px;
+        line-height: 2.0;
+      }
+      .current-btn {
+        float: left;
+        padding: 10rpx 24rpx 0 0rpx;
+      }
+    }
+  }
+}
+</style>
+<template>
+  <view class="home">
+    <view class="banner">
+      <swiper indicator-dots="{{indicatorDots}}" autoplay="{{autoplay}}" interval="{{interval}}" duration="{{duration}}">
+        <block wx:for="{{bannerList}}" wx:key="unique">
+          <swiper-item>
+            <image src="{{item}}" class="slide-image"/>
+          </swiper-item>
+        </block>
+      </swiper>
+    </view>
+    <view class="weather-info">
+      <view>{{weatherInfo.city_name}}</view>
+      <view class="weather-tem">{{weatherInfo.now.temperature}}<text> ℃</text></view>
+      <view>{{weatherInfo.now.text}} | {{weatherInfo.now.air_quality.city.quality}} {{weatherInfo.now.air_quality.city.aqi}}</view>
+      <view class="weather-sug">{{weatherInfo.today.suggestion.dressing.details}}</view>
+      <view class="weather-recent" @tap="lookWeather()">查看最近天气情况 ></view>
+    </view>
+    <view class="movie-info">
+      <view class="location">
+        <text class="current-btn">当前位置：{{cityInfo.cityName}}</text>
+        <button @tap="chooseCity">切换城市</button>
+      </view>
+      <movie :movieInfo.sync="movieInfo" :title="title"></movie>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import movieItemX from '@/components/movie-item-x'
+import WeatherService from '@/service/weather.service'
+import TimeMovieService from '@/service/timemovie.service'
+
+export default class Home extends wepy.component {
+  components = {
+    movie: movieItemX
+  }
+
+  data = {
+    indicatorDots: false,
+    autoplay: true,
+    interval: 5000,
+    duration: 1000,
+    cityInfo: {
+      locationId: 290,
+      cityName: '北京'
+    },
+    weatherInfo: {},
+    movieInfo: [],
+    title: '正在热映',
+    bannerList: [
+      'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3366700795,4035021964&fm=27&gp=0.jpg',
+      'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=3749130760,4287706910&fm=27&gp=0.jpg',
+      'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1269550404,3170207418&fm=27&gp=0.jpg'
+    ]
+  }
+
+  async onLoad() {
+    if (this.$parent.$parent.globalData.defaultCity.id) {
+      this.cityInfo = {
+        locationId: this.$parent.$parent.globalData.defaultCity.id,
+        cityName: this.$parent.$parent.globalData.defaultCity.n
+      }
+    }
+    this.weatherService = new WeatherService()
+    this.timeMovieService = new TimeMovieService()
+    let res = await this.weatherService.getAllInfo({city: 'CHBJ000000'})
+    if (res.status === 'OK') {
+      this.weatherInfo = res.weather[0]
+    }
+    let movie = await this.timeMovieService.getHotMoviesList({locationId: this.cityInfo.locationId})
+    this.movieInfo = movie.ms
+    this.$apply()
+  }
+
+  methods = {
+    lookWeather() {
+      wx.navigateTo({
+        url: '../../pages/weather/weather'
+      })
+    },
+    chooseCity() {
+      wx.navigateTo({
+        url: '../../pages/city/city'
+      })
+    }
+  }
+}
+</script>

@@ -1,0 +1,93 @@
+<style lang="less">
+// page {
+//   display: flex;
+//   flex-direction: column;
+//   height: 100%;
+// }
+.index-page {
+  position: relative;
+}
+.navbar {
+  flex: none;
+  display: flex;
+  background: #3cb371;
+  color: #fff;
+  font-size: 28rpx;
+}
+.navbar .item {
+  position: relative;
+  flex: auto;
+  text-align: center;
+  line-height: 80rpx;
+}
+.navbar .item.active {
+  // color: #FFCC00;
+}
+.navbar .item.active:after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: #fff;
+}
+</style>
+<template>
+  <view class="index-page">
+    <view class="navbar">
+      <text wx:for="{{ navBar }}" wx:key="unique" @tap="navbarTap({{index}})" class="item {{currentTab == index? 'active': ''}}">{{ item }}</text>
+    </view>
+    <view wx:if="{{currentTab == 0}}">
+      <home></home>
+    </view>
+    <view wx:if="{{currentTab == 1}}">
+      <around></around>
+    </view>
+    <view wx:if="{{currentTab == 2}}">
+      <movie></movie>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Home from '../home/home'
+  import Around from '../around/around'
+  import Movie from '../movie/movie'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '绿色生活'
+    }
+    components = {
+      home: Home,
+      around: Around,
+      movie: Movie
+    }
+
+    data = {
+      navBar: ['首页', '周边', '电影', '新闻', '更多'],
+      currentTab: 0
+    }
+
+    computed = {
+    }
+
+    methods = {
+      navbarTap (index) {
+        this.currentTab = index
+        this.$parent.globalData.currentTab = index
+      }
+    }
+
+    events = {
+    }
+
+    onLoad() {
+      this.currentTab = this.$parent.globalData.currentTab
+      this.$apply()
+    }
+  }
+</script>

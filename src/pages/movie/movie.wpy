@@ -1,0 +1,64 @@
+<style lang="less">
+  .movie {
+    padding: 0 30rpx;
+  }
+</style>
+<template>
+  <view class="movie">
+    <moviePlay :movieInfo.sync="playMovie" :title="playTitle"></moviePlay>
+    <movieHot :movieInfo.sync="hotMovie" :title="hotTitle"></movieHot>
+    <movieComing :movieInfo.sync="comingMovie" :title="comingTitle"></movieComing>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import movieItemX from '@/components/movie-item-x'
+import TimeMovieService from '@/service/timemovie.service'
+
+export default class Movie extends wepy.component {
+  components = {
+    moviePlay: movieItemX,
+    movieHot: movieItemX,
+    movieComing: movieItemX
+  }
+
+  data = {
+    cityInfo: {
+      locationId: 290,
+      cityName: '北京'
+    },
+    playMovie: [],
+    hotMovie: [],
+    comingMovie: [],
+    playTitle: '正在售票',
+    hotTitle: '正在热映',
+    comingTitle: '即将上映'
+  }
+
+  async onLoad() {
+    if (this.$parent.$parent.globalData.defaultCity.id) {
+      this.cityInfo = {
+        locationId: this.$parent.$parent.globalData.defaultCity.id,
+        cityName: this.$parent.$parent.globalData.defaultCity.n
+      }
+    }
+    this.timeMovieService = new TimeMovieService()
+    let playMovie = await this.timeMovieService.getPlayMoviesList({locationId: this.cityInfo.locationId})
+    this.playMovie = playMovie.movies
+    let hotMovie = await this.timeMovieService.getHotMoviesList({locationId: this.cityInfo.locationId})
+    this.hotMovie = hotMovie.ms
+    let comingMovie = await this.timeMovieService.getComingMoviesList({locationId: this.cityInfo.locationId})
+    this.comingMovie = comingMovie.attention
+    this.$apply()
+  }
+
+  methods = {
+    chooseCity() {
+      wx.navigateTo({
+        url: '../../pages/city/city'
+      })
+    }
+  }
+}
+
+</script>

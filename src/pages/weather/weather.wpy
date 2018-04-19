@@ -1,0 +1,164 @@
+<style lang="less">
+.weather {
+  .weather-info {
+    color: #228b22;
+    font-weight: bold;
+    font-size: 28rpx;
+    // background: #228b22;
+    background-image: url('https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3546957755,485423784&fm=27&gp=0.jpg');
+    background-size: cover;
+    padding: 10px;
+    padding-bottom: 0;
+    .weather-tem {
+      font-size: 60rpx;
+      text {
+        font-size: 24rpx;
+      }
+    }
+    .now-info {
+      display: flex;
+      flex-direction: row;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      .now-item {
+        flex: 1;
+        text-align: center;
+        border-right: 1px solid #fff;
+        margin: 10px 0;
+        text {
+          display: block;
+        }
+        .now-item-val {
+          font-size: 40rpx;
+        }
+      }
+      .now-item-last {
+        border-right: none;
+      }
+    }
+  }
+  .future {
+    color: #228b22;
+    .f-li {
+      font-size: 26rpx;
+      margin: 0 15px;
+      line-height: 50px;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+      .f-li-first {
+        float: left;
+      }
+      .f-li-last {
+        float: right;
+      }
+    }
+    .f-li-none {
+      border: none;
+    }
+    .f-btn {
+      text-align: center;
+      font-size: 26rpx;
+      line-height: 40px;
+      border-top: 1px solid #eee;
+      border-bottom: 10px solid #eee;
+    }
+  }
+  .suggestion {
+    font-size: 26rpx;
+    view {
+      padding: 10px;
+      font-size: 24rpx;
+      border-bottom: 1px solid #eee;
+    }
+    .s-header {
+      font-size: 30rpx;
+      font-weight: bold;
+    }
+  }
+}
+</style>
+<template>
+  <view class="weather">
+    <view class="weather-info">
+      <view>{{weatherInfo.city_name}}</view>
+      <view class="weather-tem">{{weatherInfo.now.temperature}}<text> ℃</text></view>
+      <view>{{weatherInfo.now.text}} | {{weatherInfo.now.air_quality.city.quality}} {{weatherInfo.now.air_quality.city.api}}</view>
+      <view class="now-info">
+        <view class="now-item">
+          <text>{{weatherInfo.now.wind_direction}}风</text>
+          <text class="now-item-val">{{weatherInfo.now.wind_scale}}级</text>
+        </view>
+        <view class="now-item">
+          <text>相对湿度</text>
+          <text class="now-item-val">{{weatherInfo.now.humidity}}%</text>
+        </view>
+        <view class="now-item now-item-last">
+          <text>体感温度</text>
+          <text class="now-item-val">{{weatherInfo.now.feels_like}} ℃</text>
+        </view>
+      </view>
+      <!-- <view class="weather-sug">{{weatherInfo.today.suggestion.dressing.details}}</view> -->
+    </view>
+    <view class="future">
+      <repeat for="{{ weatherInfo.future }}" key="index">
+        <view class="f-li {{index == 2 && !showFuture? 'f-li-none': '' }}" wx:if="{{ index < 3 && !showFuture }}">
+          <text class="f-li-first" wx:if="{{ index == 0 }}">今天</text>
+          <text class="f-li-first" wx:if="{{ index == 1 }}">明天</text>
+          <text class="f-li-first" wx:if="{{ index == 2 }}">{{ item.day }}</text>
+          <text class="f-li-center">{{ item.text }} | {{ item.wind }}</text>
+          <text class="f-li-last">{{ item.high }} / {{ item.low }}℃</text>
+        </view>
+        <view class="f-li {{index == weatherInfo.future.length - 1 && showFuture? 'f-li-none': '' }}" wx:if="{{ showFuture }}">
+          <text class="f-li-first">{{ item.day }}</text>
+          <text class="f-li-center">{{ item.text }} | {{ item.wind }}</text>
+          <text class="f-li-last">{{ item.high }} / {{ item.low }}℃</text>
+        </view>
+      </repeat>
+      <view class="f-btn" wx:if="{{!showFuture}}" @tap="futureInfo">未来十天预报&#8681;</view>
+      <view class="f-btn" wx:if="{{showFuture}}" @tap="futureInfo">收起十天预报信息&#8679;</view>
+    </view>
+    <view class="suggestion">
+      <view class="s-header">今天建议</view>
+      <view>{{weatherInfo.today.suggestion.flu.details}}</view>
+      <view>{{weatherInfo.today.suggestion.dressing.details}}</view>
+      <view>{{weatherInfo.today.suggestion.uv.details}}</view>
+      <view>{{weatherInfo.today.suggestion.sport.details}}</view>
+      <view>{{weatherInfo.today.suggestion.restriction.brief}}  {{weatherInfo.today.suggestion.restriction.details}}</view>
+      <view>{{weatherInfo.today.suggestion.car_washing.details}}</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import WeatherService from '@/service/weather.service'
+
+export default class Weather extends wepy.page {
+  config = {
+    navigationBarTitleText: '最近天气'
+  }
+
+  components = {
+  }
+
+  data = {
+    weatherInfo: {},
+    showFuture: false
+  }
+
+  async onLoad() {
+    this.weatherService = new WeatherService()
+    let res = await this.weatherService.getAllInfo({city: 'CHBJ000000'})
+    if (res.status === 'OK') {
+      this.weatherInfo = res.weather[0]
+    }
+    this.$apply()
+  }
+
+  methods = {
+    futureInfo() {
+      this.showFuture = !this.showFuture
+    }
+  }
+}
+</script>

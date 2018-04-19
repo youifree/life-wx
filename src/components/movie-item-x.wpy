@@ -1,0 +1,84 @@
+<style lang="less">
+.movie-item-x {
+  .movie-header {
+    font-size: 14px;
+    margin-bottom: 5px;
+    .more {
+      float: right;
+      color: #228b22;
+      padding-right: 34rpx;
+      position: relative;
+    }
+    .more:after {
+      content: '>';
+      position: absolute;
+      right: 10rpx;
+      top: -3rpx;
+    }
+  }
+  .scroll-view_H {
+    white-space: nowrap;
+    overflow: hidden;
+    .item {
+      font-size: 12px;
+      display: inline-block;
+      margin-right: 10px;
+      width: 110px;
+      height: 220px;
+      overflow: hidden;
+      image {
+        width: 110px;
+        height: 150px;
+      }
+      .title {
+        width: 110px;
+        white-space: normal;
+      }
+    }
+  }
+}
+</style>
+<template>
+  <view class="movie-item-x">
+    <view class="movie-header">
+      <text>{{ title }}</text>
+      <text class="more">更多</text>
+    </view>
+    <scroll-view class="scroll-view_H" scroll-x style="width: 100%">
+      <repeat for="{{movieInfo}}" key="{{item.id || item.movieId}}">
+        <view class="item">
+          <image src="{{item.img || item.image || item.images.medium}}"/>
+          <view class="title">{{item.t || item.title || item.titleCn}}</view>
+          <view>评分：{{item.r || item.videoCount || item.ratingFinal}}</view>
+        </view>
+      </repeat>
+    </scroll-view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class MovieItem extends wepy.component {
+  props = {
+    movieInfo: {
+      type: Array,
+      default: []
+      // twoWay: true // 子组件和父组件实现双向绑定
+    },
+    title: {
+      type: String,
+      default: ''
+    }
+  }
+
+  data = {
+  }
+
+  computed = {
+  }
+
+  methods = {
+  }
+}
+</script>

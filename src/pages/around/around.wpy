@@ -1,0 +1,275 @@
+<style lang="less">
+.around {
+  padding: 1px 30rpx;
+  .a-header {
+    flex: none;
+    display: flex;
+    font-size: 28rpx;
+    .item {
+      flex: auto;
+      text-align: center;
+      border-radius: 10px;
+      image {
+        width: 50px;
+        height: 50px;
+        border-radius: 25px;
+      }
+      text {
+        display: block;
+        color: skyBlue;
+        font-size: 32rpx;
+        text-align: center;
+      }
+    }
+    .item.active {
+      border: 1px solid skyBlue;
+    }
+  }
+  .a-map {
+    height: 350px;
+    border: 2rpx solid #2a579a;
+    border-radius: 10px;
+    padding: 10rpx 30rpx;
+    margin-top: 10rpx;
+    .map {
+      height: 100%;
+      width: 100%;
+    }
+  }
+}
+</style>
+<template>
+  <view class="around">
+    <view class="a-header">
+      <view @tap="selTab(1)" class="item {{tabTag == 1? 'active': ''}}">
+        <image src="{{hotelImg}}" />
+        <text>酒店</text>
+      </view>
+      <view @tap="selTab(2)" class="item {{tabTag == 2? 'active': ''}}">
+        <image src="{{foodImg}}" />
+        <text>餐饮</text>
+      </view>
+      <view @tap="selTab(3)" class="item {{tabTag == 3? 'active': ''}}">
+        <image src="{{playImg}}" />
+        <text>娱乐</text>
+      </view>
+    </view>
+    <view class="a-map">
+      <map class="map" id="map" longitude="{{longitude}}" latitude="{{latitude}}" scale="18" show-location="true" markers="{{markers}}" bindmarkertap="markertap"></map>
+    </view>
+    <view>{{ placeData.title }}</view>
+    <view>{{ placeData.address }}</view>
+    <view>{{ placeData.telephone }}</view>
+    <view class="a-map">
+      <map class="map" id="mapb" longitude="{{lng}}" latitude="{{lat}}" scale="18" show-location="true" markers="{{bmarkers}}" bindmarkertap="bmarkertap"></map>
+    </view>
+    <view>{{ bplaceData.title }}</view>
+    <view>{{ bplaceData.address }}</view>
+    <view>{{ bplaceData.telephone }}</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import QQMapWX from '@/libs/qqmap-wx-jssdk.min.js'
+import bmap from '@/libs/bmap-wx.min.js'
+
+export default class Around extends wepy.component {
+  components = {
+  }
+
+  data = {
+    hotelImg: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3751831434,1084387893&fm=27&gp=0.jpg',
+    foodImg: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2969144100,447142705&fm=27&gp=0.jpg',
+    playImg: 'https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2979115483,2814466539&fm=27&gp=0.jpg',
+    tabTag: 1,
+    // 腾讯地图api及相关变量操作
+    qqmapsdk: {},
+    markers: [],
+    latitude: '',
+    longitude: '',
+    wxMarkerData: [],
+    placeData: {
+      title: '',
+      address: '',
+      telephone: ''
+    },
+    // 百度地图api及相关变量操作
+    bmapsdk: {},
+    bmarkers: [],
+    lat: '',
+    lng: '',
+    bwxMarkerData: [],
+    bplaceData: {
+      title: '',
+      address: '',
+      telephone: ''
+    }
+  }
+
+  async onLoad() {
+    var that = this
+    // 获取当前位置
+    // wx.getLocation({
+    //   success: function(res) {
+    //     console.log(res)
+    //   }
+    // })
+    // 新建腾讯地图对象
+    that.qqmapsdk = new QQMapWX({
+      key: 'F7BBZ-L3TWV-T5GPL-UZRRH-56Z55-HVFPU'
+    })
+    that.onShow('酒店')
+    // this.qqmapsdk.getCityList({
+    //   success: function(res) {
+    //     console.log(res)
+    //   }
+    // })
+
+    // 新建百度地图对象
+    that.bmapsdk = new bmap.BMapWX({
+      ak: 'heTp7eyEK8d6cWplVB2VpXcmZywnhQfo'
+    })
+    that.onShowb('酒店')
+    that.$apply()
+  }
+
+ // 腾讯地图相关js操作（腾讯）
+  onShow(keyword) {
+    var that = this
+    // （默认当前位置）
+    this.qqmapsdk.search({
+      keyword: keyword,
+      success: function (res) {
+        that.wxMarkerData = res.data
+        that.markers = that.wxMarkerData
+        that.latitude = that.wxMarkerData[0].location.lat
+        that.longitude = that.wxMarkerData[0].location.lng
+        that.changeMarkerColor(that.wxMarkerData)
+        that.$apply()
+      },
+      fail: function (res) {
+        console.log('失败了、、、、、')
+        console.log(res)
+        wx.showToast({ title: '请求失败', icon: 'none', duration: 3000 })
+      }
+    })
+    this.$apply()
+  }
+
+  // 获得周边信息渲染到页面里（腾讯）
+  showSearchInfo(data) {
+    this.placeData = {
+      title: '名称：' + data.title,
+      address: '地址：' + data.address,
+      telephone: data.tel === undefined ? '电话：暂无信息' : '电话：' + data.tel
+    }
+    this.$apply()
+  }
+
+  // 改变标记点颜色（腾讯）
+  changeMarkerColor(data, id) {
+    var markersTemp = []
+    for (let i = 0; i < data.length; i++) {
+      // latitude、longitude必须有才能显示小标
+      data[i].latitude = data[i].location.lat
+      data[i].longitude = data[i].location.lng
+      if (data[i].id === id) {
+        data[i].iconPath = '../../assets/marker_blue.png'
+      } else {
+        data[i].iconPath = '../../assets/marker_red.png'
+      }
+      markersTemp[i] = data[i]
+    }
+    this.markers = markersTemp
+    this.$apply()
+  }
+
+  // 百度地图js相关操作（百度）
+  onShowb(keyword) {
+    var that = this
+    // 发起search检索请求（默认当前位置）
+    this.bmapsdk.search({
+      query: keyword,
+      fail: function(data) {
+        wx.showToast({ title: '请求失败', icon: 'none', duration: 3000 })
+      },
+      success: function(data) {
+        that.bwxMarkerData = data.wxMarkerData
+        that.bmarkers = that.bwxMarkerData
+        that.lat = that.bwxMarkerData[0].latitude
+        that.lng = that.bwxMarkerData[0].longitude
+        that.changeMarkerColorb(that.bwxMarkerData)
+        that.$apply()
+      },
+      iconPath: '../../assets/marker_red.png',
+      iconTapPath: '../../assets/marker_red.png'
+    })
+  }
+
+  // 获得周边信息渲染到页面里（百度）
+  showSearchb(data, i) {
+    this.bplaceData = {
+      title: '名称：' + data[i].title,
+      address: '地址：' + data[i].address,
+      telephone: data[i].telephone === undefined ? '电话：暂无信息' : '电话：' + data[i].telephone
+    }
+    this.$apply()
+  }
+
+  // 改变标记点颜色（百度）
+  changeMarkerColorb(data, id) {
+    let markersTemp = []
+    for (let i = 0; i < data.length; i++) {
+      if (i === id) {
+        data[i].iconPath = '../../assets/marker_blue.png'
+      } else {
+        data[i].iconPath = '../../assets/marker_red.png'
+      }
+      markersTemp[i] = data[i]
+    }
+    this.bmarkers = markersTemp
+    this.$apply()
+  }
+
+  methods = {
+    // 点击地图标记点时触发，显示周边信息，改变标记点颜色（腾讯地图）
+    markertap(e) {
+      let id = e.markerId
+      let itemVal = {}
+      this.wxMarkerData.map(item => {
+        if (item.id === id) {
+          itemVal = item
+        }
+      })
+      this.showSearchInfo(itemVal, id)
+      this.changeMarkerColor(this.wxMarkerData, id)
+    },
+    // 点击地图标记点时触发，显示周边信息，改变标记点颜色（百度地图）
+    bmarkertap(e) {
+      let id = e.markerId
+      this.showSearchb(this.bwxMarkerData, id)
+      this.changeMarkerColorb(this.bwxMarkerData, id)
+    },
+    selTab(tag) {
+      if (this.tabTag !== tag) {
+        var keyword = ''
+        switch (tag) {
+          case '1':
+            keyword = '酒店'
+            break
+          case '2':
+            keyword = '餐饮'
+            break
+          case '3':
+            keyword = '娱乐'
+            break
+        }
+        this.onShow(keyword)
+        this.onShowb(keyword)
+      }
+      this.tabTag = tag
+    }
+  }
+}
+</script>

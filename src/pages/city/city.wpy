@@ -1,0 +1,168 @@
+<style lang="less">
+.select-city {
+  background: #eee;
+  font-size: 28rpx;
+  .search-city {
+    text-align: center;
+    height: 30px;
+    border: 10px solid #fff;
+  }
+  .hot {
+    padding: 15px 10rpx 30px;
+    &-title {
+      color: red;
+      margin-left: 30rpx;
+    }
+    &-content {
+      text-align: center;
+      text {
+        display: inline-block;
+        text-align: center;
+        background: #fff;
+        padding: 10rpx 20rpx;
+        margin: 10rpx;
+        border-radius: 4rpx;
+        min-width: 170rpx;
+      }
+    }
+  }
+  .all-city {
+    view {
+      padding: 30rpx 30rpx;
+      border-bottom: 1rpx solid #eee;
+      background: #fff;
+    }
+  }
+  .go-top {
+    display: inline-block;
+    padding: 10px 0;
+    border-radius: 18px;
+    color: #fff;
+    width: 40px;
+    text-align: center;
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    background: #3cb371;
+  }
+}
+</style>
+<template>
+  <view class="select-city">
+    <input class="search-city" @input="keyInput" placeholder="输入城市名或拼音查询"/>
+    <view class="hot">
+      <view class="hot-title">热门城市</view>
+      <view class="hot-content">
+        <repeat for="{{ hotCityList }}" item="item" key="index">
+          <text @tap="chooseHotCity({{item}})">{{item.n}}市</text>
+        </repeat>
+      </view>
+    </view>
+    <view class="all-city">
+      <repeat for="{{ showList }}" item="item" key="index">
+        <view @tap="chooseCity({{item}})">{{item.n}}市</view>
+      </repeat>
+    </view>
+    <view class="go-top" @tap="goTop">顶部&#8593;&#8593;</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import TimeMovieService from '@/service/timemovie.service'
+
+export default class SelectCity extends wepy.page {
+  config = {
+    navigationBarTitleText: '切换城市'
+  }
+
+  data = {
+    cityList: [],
+    showList: [],
+    hotCityList: [
+      {
+        id: 290,
+        n: '北京',
+        count: 120,
+        pinyinShort: 'bj',
+        pinyinFull: 'Beijing'
+      }, {
+        id: 292,
+        n: '上海',
+        count: 119,
+        pinyinShort: 'sh',
+        pinyinFull: 'Shanghai'
+      }, {
+        id: 365,
+        n: '广州',
+        count: 84,
+        pinyinShort: 'gz',
+        pinyinFull: 'Guangzhou'
+      }, {
+        id: 366,
+        n: '深圳',
+        count: 84,
+        pinyinShort: 'sz',
+        pinyinFull: 'Shenzhen'
+      }, {
+        id: 974,
+        n: '杭州',
+        count: 34,
+        pinyinShort: 'hz',
+        pinyinFull: 'Hangzhou'
+      }, {
+        id: 598,
+        n: '长沙',
+        count: 28,
+        pinyinShort: 'cs',
+        pinyinFull: 'Changsha'
+      }
+    ]
+  }
+
+  async onLoad() {
+    this.timeMovieService = new TimeMovieService()
+    let cityList = await this.timeMovieService.getCityList({})
+    this.cityList = cityList.p
+    this.showList = cityList.p
+    this.$apply()
+  }
+
+  methods = {
+    keyInput(e) {
+      this.showList = []
+      this.cityList.map(item => {
+        if (item.n.toLowerCase().indexOf(e.detail.value.toLowerCase()) !== -1 ||
+        item.pinyinShort.toLowerCase().indexOf(e.detail.value.toLowerCase()) !== -1 ||
+        item.pinyinFull.toLowerCase().indexOf(e.detail.value.toLowerCase()) !== -1) {
+          this.showList.push(item)
+        }
+      })
+    },
+    goTop(e) { // 一键回到顶部
+      if (wx.pageScrollTo) {
+        wx.pageScrollTo({
+          scrollTop: 0
+        })
+      } else {
+        wx.showModal({
+          title: '提示',
+          content: '当前微信版本过低，无法使用该功能，请升级到最新微信版本后重试。'
+        })
+      }
+    },
+    chooseHotCity(item) {
+      this.$parent.globalData.defaultCity = item
+      wx.navigateTo({
+        url: '../../pages/index/index'
+      })
+    },
+    chooseCity(item) {
+      this.$parent.globalData.defaultCity = item
+      wx.navigateTo({
+        url: '../../pages/index/index'
+      })
+    }
+  }
+}
+</script>
