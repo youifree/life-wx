@@ -54,7 +54,7 @@
       <view class="hot-title">热门城市</view>
       <view class="hot-content">
         <repeat for="{{ hotCityList }}" item="item" key="index">
-          <text @tap="chooseHotCity({{item}})">{{item.n}}市</text>
+          <text @tap="chooseCity({{item}})">{{item.n}}市</text>
         </repeat>
       </view>
     </view>
@@ -151,12 +151,12 @@ export default class SelectCity extends wepy.page {
         })
       }
     },
-    chooseHotCity(item) {
-      this.$parent.globalData.defaultCity = item
-      wx.navigateTo({
-        url: '../../pages/index/index'
-      })
-    },
+    // chooseHotCity(item) {
+    //   this.$parent.globalData.defaultCity = item
+    //   wx.navigateTo({
+    //     url: '../../pages/index/index'
+    //   })
+    // },
     chooseCity(item) {
       this.$parent.globalData.defaultCity = item
       wx.navigateTo({

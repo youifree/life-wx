@@ -42,7 +42,7 @@
   <view class="movie-item-x">
     <view class="movie-header">
       <text>{{ title }}</text>
-      <text class="more">更多</text>
+      <text class="more" @tap="lookMore()">更多</text>
     </view>
     <scroll-view class="scroll-view_H" scroll-x style="width: 100%">
       <repeat for="{{movieInfo}}" key="{{item.id || item.movieId}}">
@@ -59,16 +59,16 @@
 <script>
 import wepy from 'wepy'
 
-export default class MovieItem extends wepy.component {
+export default class MovieItemX extends wepy.component {
   props = {
     movieInfo: {
       type: Array,
       default: []
       // twoWay: true // 子组件和父组件实现双向绑定
     },
-    title: {
-      type: String,
-      default: ''
+    type: {
+      type: Number,
+      default: 0 // 0:正在售票 1:正在热映 2:即将上映
     }
   }
 
@@ -76,9 +76,18 @@ export default class MovieItem extends wepy.component {
   }
 
   computed = {
+    title() {
+      let titleList = ['正在售票', '正在热映', '即将上映']
+      return titleList[this.type]
+    }
   }
 
   methods = {
+    lookMore() {
+      wx.navigateTo({
+        url: '../../pages/movie/moreInfo?type=' + this.type
+      })
+    }
   }
 }
 </script>

@@ -1,0 +1,38 @@
+<style lang="less">
+  .more {
+    padding: 20rpx 30rpx;
+  }
+</style>
+<template>
+  <view class="more">
+    更多信息，敬请期待。。。
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class More extends wepy.component {
+  components = {
+  }
+
+  data = {
+  }
+
+  onLoad() {
+    this.$apply()
+  }
+
+  async init() {
+    this.$apply()
+  }
+
+  methods = {
+    // lookMore(title, id) {
+    //   wx.navigateTo({
+    //     url: './movie/more/info'
+    //   })
+    // }
+  }
+}
+
+</script>

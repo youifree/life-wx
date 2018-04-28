@@ -107,8 +107,7 @@ export default class Around extends wepy.component {
     }
   }
 
-  async onLoad() {
-    var that = this
+  onLoad() {
     // 获取当前位置
     // wx.getLocation({
     //   success: function(res) {
@@ -116,10 +115,10 @@ export default class Around extends wepy.component {
     //   }
     // })
     // 新建腾讯地图对象
-    that.qqmapsdk = new QQMapWX({
+    this.qqmapsdk = new QQMapWX({
       key: 'F7BBZ-L3TWV-T5GPL-UZRRH-56Z55-HVFPU'
     })
-    that.onShow('酒店')
+    // that.onShowT('酒店')
     // this.qqmapsdk.getCityList({
     //   success: function(res) {
     //     console.log(res)
@@ -127,18 +126,24 @@ export default class Around extends wepy.component {
     // })
 
     // 新建百度地图对象
-    that.bmapsdk = new bmap.BMapWX({
+    this.bmapsdk = new bmap.BMapWX({
       ak: 'heTp7eyEK8d6cWplVB2VpXcmZywnhQfo'
     })
-    that.onShowb('酒店')
-    that.$apply()
+    // that.onShowB('酒店')
+    this.$apply()
+  }
+
+  init() {
+    this.onShowT('酒店')
+    this.onShowB('酒店')
+    this.$apply()
   }
 
  // 腾讯地图相关js操作（腾讯）
-  onShow(keyword) {
+  onShowT(keyword) {
     var that = this
     // （默认当前位置）
-    this.qqmapsdk.search({
+    that.qqmapsdk.search({
       keyword: keyword,
       success: function (res) {
         that.wxMarkerData = res.data
@@ -186,7 +191,7 @@ export default class Around extends wepy.component {
   }
 
   // 百度地图js相关操作（百度）
-  onShowb(keyword) {
+  onShowB(keyword) {
     var that = this
     // 发起search检索请求（默认当前位置）
     this.bmapsdk.search({
@@ -265,8 +270,8 @@ export default class Around extends wepy.component {
             keyword = '娱乐'
             break
         }
-        this.onShow(keyword)
-        this.onShowb(keyword)
+        this.onShowT(keyword)
+        this.onShowB(keyword)
       }
       this.tabTag = tag
     }

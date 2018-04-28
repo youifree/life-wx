@@ -1,0 +1,114 @@
+<style lang="less">
+  .pop-mian {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 10;
+    overflow: hidden;
+    @keyframes dialog-gradient {
+      0% {
+        transform: translateY(100%);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+    .pop-mian-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 11;
+      overflow: hidden;
+      .wx-modal{
+        background: #000;
+        opacity: 0.3;
+        z-index: 12;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 11;
+      }
+      .dialog{
+        bottom: 0;
+        position: absolute;
+        width: 100%;
+        background: #fff;
+        z-index: 13;
+        animation: dialog-gradient 0.15s linear;
+        .top{
+          width: 100%;
+          height: 80rpx;
+          background: #f5f5f5;
+          line-height: 80rpx;
+          overflow: hidden;
+          .left, .right{
+            width: 140rpx;
+            text-align: center;
+            font-size: 16px;
+          }
+          .left{
+            float: left;
+            color: #666;
+          }
+          .right{
+            float: right;
+            color: #2EAE27;
+          }
+        }
+      }
+    }
+  }
+</style>
+<template>
+  <view class="pop-mian" style="height: {{ height }}px">
+    <view class="pop-mian-content">
+      <view class="wx-modal" @tap="hidePop"></view>
+      <view class="dialog">
+        <view class="top">
+          <view class="left" @tap="hidePop">取消</view>
+          <view class="right">
+            <slot name="sure">确定</slot>
+          </view>
+        </view>
+        <slot name="content"></slot>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  export default class PopMain extends wepy.component {
+    props = {
+    }
+    data = {
+      height: ''
+    }
+    components = {
+    }
+    onLoad () {
+      let self = this
+      wx.getSystemInfo({
+        success: function(res) {
+          // console.log(res.model)
+          // console.log(res.pixelRatio)
+          // console.log(res.windowWidth)
+          // console.log(res.windowHeight)
+          // console.log(res.language)
+          // console.log(res.version)
+          self.height = res.windowHeight
+          self.$apply()
+        }
+      })
+    }
+    methods = {
+      hidePop () {
+        this.$emit('changePop')
+      }
+    }
+  }
+</script>

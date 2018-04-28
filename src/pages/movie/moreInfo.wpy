@@ -1,0 +1,141 @@
+<style lang="less">
+.movie-more-info {
+  background: #eee;
+  font-size: 28rpx;
+  .bottpm-content {
+    background: #fff;
+    text-align: center;
+    padding: 10px;
+  }
+}
+</style>
+<template>
+  <view class="movie-more-info">
+    <movie :movieInfo.sync="movieList"></movie>
+    <view class="bottpm-content">到底了。。。</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import movieItemY from '@/components/movie-item-y'
+import TimeMovieService from '@/service/timemovie.service'
+
+export default class MovieMoreInfo extends wepy.page {
+  config = {
+    // 设置。。。加载动画显示样式
+    backgroundTextStyle: 'dark',
+    enablePullDownRefresh: true
+  }
+
+  components = {
+    movie: movieItemY
+  }
+
+  data = {
+    type: 0,
+    locationId: 290,
+    movieList: []
+  }
+
+  // 上拉到底部调用该函数
+  onReachBottom() {
+    // 显示/隐藏loading提示框
+    wx.showLoading({ title: '数据加载到底了' })
+    setTimeout(() => {
+      wx.hideLoading()
+    }, 2000)
+    console.log('到底了、、、、')
+  }
+  // 下拉到底部调用该函数
+  onPullDownRefresh() {
+    // 显示/隐藏导航条加载动画
+    wx.showNavigationBarLoading()
+    setTimeout(() => {
+      wx.hideNavigationBarLoading()
+      // 关闭。。。加载动画的显示
+      wx.stopPullDownRefresh()
+    }, 2000)
+    console.log('到顶了。。。。')
+  }
+
+  async onLoad(options) {
+    let self = this
+    this.type = options.type
+    this.timeMovieService = new TimeMovieService()
+    if (this.$parent.globalData.defaultCity.id) {
+      this.locationId = this.$parent.globalData.defaultCity.id
+    }
+    if (Number(this.type) === 0) {
+      wx.setNavigationBarTitle({
+        title: '正在售票电影列表'
+      })
+      let playMovie = await this.timeMovieService.getPlayMoviesList({locationId: this.locationId})
+      this.movieList = playMovie.movies
+    }
+    if (Number(this.type) === 1) {
+      wx.setNavigationBarTitle({
+        title: '正在热映电影列表'
+      })
+      let hotMovie = await this.timeMovieService.getHotMoviesList({locationId: this.locationId})
+      this.movieList = hotMovie.ms
+    }
+    if (Number(this.type) === 2) {
+      wx.setNavigationBarTitle({
+        title: '即将上映电影列表'
+      })
+      let comingMovie = await this.timeMovieService.getComingMoviesList({locationId: this.locationId})
+      this.movieList = comingMovie.attention
+    }
+    this.movieList.map(item => {
+      if (item.nearestShowtime) {
+        item.releaseDate = self.timestampToTime(item.nearestShowtime.nearestShowDay)
+      }
+      if (item.NearestDay) {
+        item.releaseDate = self.timestampToTime(item.NearestDay)
+      }
+      if (item.movieType) {
+        item.type = item.movieType
+      }
+      let actors = ''
+      if (item.actorName1) {
+        actors = item.actorName1
+      }
+      if (item.actorName2) {
+        actors = actors + '、' + item.actorName2
+      }
+      if (item.aN1) {
+        actors = item.aN1
+      }
+      if (item.aN2) {
+        actors = actors + '、' + item.aN2
+      }
+      if (item.actor1) {
+        actors = item.actor1
+      }
+      if (item.actor2) {
+        actors = actors + '、' + item.actor2
+      }
+      item.actors = actors
+    })
+    this.$apply()
+  }
+
+  timestampToTime(time) {
+    let date = new Date(time * 1000)
+    let Y = date.getFullYear() + ' - '
+    let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + ' - '
+    let D = date.getDate()
+    return Y + M + D
+  }
+
+  methods = {
+    // chooseHotCity(item) {
+    //   this.$parent.globalData.defaultCity = item
+    //   wx.navigateTo({
+    //     url: '../../pages/index/index'
+    //   })
+    // }
+  }
+}
+</script>

@@ -1,0 +1,291 @@
+<style lang="less">
+.photo {
+  padding: 10rpx;
+  .img {
+    display: inline-block;
+    text-align: left;
+    .btn {
+      width: 220rpx;
+      height: 220rpx;
+      border: 1px dashed #ddd;
+      margin: 4rpx 10rpx;
+    }
+    .image-box {
+      position: relative;
+      display: inline-block;
+      margin: 4rpx 10rpx;
+      .val {
+        width: 222rpx;
+        height: 222rpx;
+      }
+      .del {
+        position: absolute;
+        left: 0;
+        bottom: 10rpx;
+        background: #5e5e5e;
+        text-align: center;
+        opacity: 0.8;
+        width: 222rpx;
+        height: 54rpx;
+        color: #eee;
+        font-size: 14px;
+        line-height: 54rpx;
+      }
+    }
+  }
+  .region {
+    padding: 20px 0;
+  }
+  .time-pop {
+    width: 100%;
+    overflow: hidden;
+    background: #fff;
+    .day {
+      background: #f5f5f5;
+      width: 300rpx;
+      height: 100%;
+      float: left;
+    }
+    .li {
+      height: 45px;
+      line-height: 45px;
+      text-align: center;
+      font-size: 15px;
+      color: #333;
+      &.active{
+        background: #fff;
+      }
+    }
+    .time{
+      padding: 0 60rpx;
+      height: 490rpx;
+      overflow-y: auto;
+      .li{
+        border-bottom: 1rpx solid #e5e5e5;
+        position: relative;
+        .active{
+          background: url(http://p5baddul2.bkt.clouddn.com/icon/checked.png) no-repeat center;
+          background-size: 15px;
+          width: 15px;
+          height: 15px;
+          position: absolute;
+          right: 16rpx;
+          top: 15px;
+        }
+      }
+    }
+  }
+}
+</style>
+<template>
+  <view class="photo">
+    <view class="img">
+      <repeat for="{{ imgList }}" key="{{ index }}">
+        <view class="image-box">
+          <image class="val" @tap="priviewImage({{item}})" src="{{ item }}"></image>
+          <view class="del" @tap="deleteImage({{index}})">删除</view>
+        </view>
+      </repeat>
+      <image wx:if="{{ imgList.length < 9 }}" class="btn" @tap="chooseImage()" src="{{ img }}"></image>
+    </view>
+    <view class="region">
+      <view class="section__title">省市区选择器</view>
+      <picker mode="region" bindchange="bindRegionChange" value="{{ region }}" custom-item="{{ customItem }}">
+        <view class="picker">
+          当前选择：{{region[0]}}，{{region[1]}}，{{region[2]}}
+        </view>
+      </picker>
+    </view>
+    <view>
+      <view @tap="changePop">请选择上映时间：{{ showTimeText }}</view>
+    </view>
+    <view>
+      <view>当前选择时间：{{ year }}年{{ month }}月{{ day }}日</view>
+      <picker-view indicator-style="height: 50px;" style="width: 100%; height: 300px;" value="{{ value }}" bindchange="selectTime">
+        <picker-view-column>
+          <repeat for="{{ years }}" key="{{ index }}">
+            <view style="line-height: 50px; text-align: center">{{ item }}年</view>
+          </repeat>
+        </picker-view-column>
+        <picker-view-column>
+          <repeat for="{{ months }}" key="{{ index }}">
+            <view style="line-height: 50px; text-align: center">{{ item }}月</view>
+          </repeat>
+        </picker-view-column>
+        <picker-view-column>
+          <repeat for="{{ days }}" key="{{ index }}">
+            <view style="line-height: 50px; text-align: center">{{ item }}日</view>
+          </repeat>
+        </picker-view-column>
+      </picker-view>
+    </view>
+    <popbottom @changePop.user="changePop" wx:if="{{showPopBottom}}">
+      <view slot="sure" @tap="sureTime">确定</view>
+      <view slot="content">
+        <view class="time-pop">
+          <view class="day">
+            <repeat for="{{ dayList }}" item="item" key="time">
+              <view class="li {{ item.time === daySelect ? 'active' : '' }}" @tap="chooseDay({{item}}, {{ index }})">
+                {{ item.name }}
+              </view>
+            </repeat>
+          </view>
+          <view class="time" id="time">
+            <repeat for="{{ timeList }}" item="item" key="item">
+              <view class="li" @tap="chooseTime({{item}}, {{index}})">
+                {{ item.start }} - {{ item.end }}
+                <view class="{{ index === timeIndex[dayIndex] ? 'active' : ''  }}"></view>
+              </view>
+            </repeat>
+          </view>
+        </view>
+      </view>
+    </popbottom>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import popBottom from '@/components/pop-bottom'
+import { getNowDay, getNowTime } from '@/utils/util'
+
+export default class Photo extends wepy.component {
+  components = {
+    popbottom: popBottom
+  }
+
+  data = {
+    img: 'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=2420317940,1989595870&fm=27&gp=0.jpg',
+    imgList: [],
+    region: ['北京市', '北京市', '朝阳区'],
+    customItem: '全部',
+    showPopBottom: false,
+    year: '',
+    month: '',
+    day: '',
+    value: [],
+    years: [],
+    months: [],
+    days: [],
+    dayList: [],
+    timeList: [],
+    daySelect: '',
+    timeSelect: '',
+    timeObject: {},
+    dayIndex: 0,
+    timeIndex: [0, 0, 0],
+    hopeTimeBegin: '',
+    hopeTimeEnd: '',
+    showTimeText: ''
+  }
+
+  onLoad() {
+    let date = new Date()
+    this.dayList = getNowDay()
+    this.timeList = getNowTime(0)
+    for (let i = 1990; i <= date.getFullYear() + 50; i++) {
+      this.years.push(i)
+    }
+    for (let i = 1; i <= 12; i++) {
+      this.months.push(i)
+    }
+    for (let i = 1; i <= 31; i++) {
+      this.days.push(i)
+    }
+    this.$apply()
+  }
+
+  init() {
+    this.imgList = []
+    this.region = ['北京市', '北京市', '朝阳区']
+    this.showPopBottom = false
+    this.daySelect = this.dayList[0].time
+    this.timeSelect = this.timeList[0].start
+    this.timeObject = this.timeList[0]
+    this.dayIndex = 0
+    this.timeIndex = [0, 0, 0]
+    this.hopeTimeBegin = ''
+    this.hopeTimeEnd = ''
+    this.showTimeText = ''
+    let date = new Date()
+    this.year = date.getFullYear()
+    this.month = date.getMonth() + 1
+    this.day = date.getDate()
+    this.years.map((item, index) => {
+      if (item === this.year) {
+        this.value[0] = index
+      }
+    })
+    this.months.map((item, index) => {
+      if (item === this.month) {
+        this.value[1] = index
+      }
+    })
+    this.days.map((item, index) => {
+      if (item === this.day) {
+        this.value[2] = index
+      }
+    })
+    this.$apply()
+  }
+
+  methods = {
+    chooseImage() {
+      var self = this
+      wx.chooseImage({
+        // count: 3, // 默认9（限制选择图片的个数）
+        sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+        // sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+        success: function (res) {
+          // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
+          var tempFilePaths = res.tempFilePaths
+          tempFilePaths.map(item => {
+            self.imgList.push(item)
+          })
+          self.$apply()
+        }
+      })
+    },
+    priviewImage(item) {
+      wx.previewImage({
+        current: item, // 当前显示图片的http链接
+        urls: this.imgList // 需要预览的图片http链接列表
+      })
+    },
+    deleteImage(index) {
+      this.imgList.splice(index, 1)
+    },
+    bindRegionChange(e) {
+      this.region = e.detail.value
+    },
+    selectTime(e) {
+      this.year = this.years[e.detail.value[0]]
+      this.month = this.months[e.detail.value[1]]
+      this.day = this.days[e.detail.value[2]]
+    },
+    showPop() {
+      this.showPopBottom = true
+    },
+    changePop() {
+      this.showPopBottom = !this.showPopBottom
+    },
+    sureTime() {
+      this.showPopBottom = false
+      this.hopeTimeBegin = this.daySelect + ' ' + this.timeObject.start + ':00'
+      this.hopeTimeEnd = this.daySelect + ' ' + this.timeObject.end + ':00'
+      this.showTimeText = this.daySelect + ' ' + this.timeObject.start + ' - ' + this.timeObject.end
+      this.showTimeText = this.showTimeText.substring(5, this.showTimeText.length)
+    },
+    chooseDay (item, index) {
+      this.daySelect = item.time
+      this.timeList = getNowTime(index)
+      this.dayIndex = index
+    },
+    chooseTime (item, index) {
+      this.timeSelect = item.start
+      this.timeObject = item
+      this.timeIndex[this.dayIndex] = index
+    }
+  }
+}
+</script>

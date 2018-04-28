@@ -74,7 +74,7 @@
         <text class="current-btn">当前位置：{{cityInfo.cityName}}</text>
         <button @tap="chooseCity">切换城市</button>
       </view>
-      <movie :movieInfo.sync="movieInfo" :title="title"></movie>
+      <movie :movieInfo.sync="movieInfo" :type="movieType"></movie>
     </view>
   </view>
 </template>
@@ -101,7 +101,7 @@ export default class Home extends wepy.component {
     },
     weatherInfo: {},
     movieInfo: [],
-    title: '正在热映',
+    movieType: 1,
     bannerList: [
       'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3366700795,4035021964&fm=27&gp=0.jpg',
       'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=3749130760,4287706910&fm=27&gp=0.jpg',
@@ -109,15 +109,19 @@ export default class Home extends wepy.component {
     ]
   }
 
-  async onLoad() {
+  onLoad() {
+    this.weatherService = new WeatherService()
+    this.timeMovieService = new TimeMovieService()
+    this.$apply()
+  }
+
+  async init() {
     if (this.$parent.$parent.globalData.defaultCity.id) {
       this.cityInfo = {
         locationId: this.$parent.$parent.globalData.defaultCity.id,
         cityName: this.$parent.$parent.globalData.defaultCity.n
       }
     }
-    this.weatherService = new WeatherService()
-    this.timeMovieService = new TimeMovieService()
     let res = await this.weatherService.getAllInfo({city: 'CHBJ000000'})
     if (res.status === 'OK') {
       this.weatherInfo = res.weather[0]
@@ -126,6 +130,10 @@ export default class Home extends wepy.component {
     this.movieInfo = movie.ms
     this.$apply()
   }
+
+  // onPullDownRefresh() {
+  //   this.init()
+  // }
 
   methods = {
     lookWeather() {

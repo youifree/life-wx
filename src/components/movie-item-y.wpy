@@ -1,0 +1,87 @@
+<style lang="less">
+.movie-item-y {
+  background: #fff;
+  .scroll-view_H {
+    overflow: hidden;
+    .item {
+      font-size: 12px;
+      margin: 10px;
+      overflow: hidden;
+      vertical-align: top;
+      border: 1px solid #ddd;
+      background: #efefef;
+      white-space: nowrap;
+      image {
+        width: 70px;
+        height: 103px;
+        float: left;
+      }
+      .item-content {
+        padding: 5px 10px;
+        display: inline-block;
+        .title {
+          color: #228b22;
+          font-size: 16px;
+          padding-bottom: 3px;
+        }
+        view {
+          width: 530rpx;
+        }
+        .actors {
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+      }
+    }
+  }
+}
+</style>
+<template>
+  <view class="movie-item-y">
+    <view class="scroll-view_H" style="width: 100%">
+      <repeat for="{{movieInfo}}" key="{{item.id || item.movieId}}">
+        <view class="item">
+          <image src="{{item.img || item.image || item.images.medium}}"/>
+          <view class="item-content">
+            <view class="title">{{item.t || item.title || item.titleCn}}</view>
+            <view>
+              上映时间：{{item.releaseDate}}
+              <text wx-if="{{item.locationName}}">（{{item.locationName}}）</text>
+            </view>
+            <view>类型：{{item.type}}</view>
+            <view>导演：{{item.directorName || item.dN || item.director}}</view>
+            <view class="actors">主演：{{item.actors}}</view>
+          </view>
+        </view>
+      </repeat>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class MovieItemY extends wepy.component {
+  props = {
+    movieInfo: {
+      type: Array,
+      default: []
+      // twoWay: true // 子组件和父组件实现双向绑定
+    }
+  }
+
+  data = {
+  }
+
+  computed = {
+  }
+
+  methods = {
+    lookMore(title, id) {
+      wx.navigateTo({
+        // url: '../../pages/movie/moreInfo?title=' + title
+      })
+    }
+  }
+}
+</script>

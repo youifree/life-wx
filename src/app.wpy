@@ -24,22 +24,25 @@ export default class extends wepy.app {
     pages: [
       'pages/index/index',
       'pages/weather/weather',
-      'pages/city/city'
+      'pages/city/city',
+      'pages/movie/moreInfo'
     ],
     window: {
       backgroundTextStyle: 'light',
       navigationBarBackgroundColor: '#3cb371',
       navigationBarTitleText: 'WeChat',
-      navigationBarTextStyle: 'white'
+      navigationBarTextStyle: 'white',
+      enablePullDownRefresh: false
     }
   }
 
   globalData = {
     userInfo: null,
     currentTab: 0,
-    defaultCity: {},
-    doubanBase: 'https://api.douban.com',
-    weatherBase: 'http://tj.nineton.cn/'
+    defaultCity: {
+      id: 290,
+      n: '北京'
+    }
   }
 
   constructor () {
