@@ -1,37 +1,127 @@
 <style lang="less">
-  .more {
+  .more-page {
     padding: 20rpx 30rpx;
   }
 </style>
 <template>
-  <view class="more">
+  <view class="more-page">
+    <button @tap="scan()">扫一扫</button>
+    <view>
+      <label>网址：</label>
+      <input bindinput="inputVal" value="{{result}}" placeholder="{{placeholder}}">
+    </view>
+    <canvas @tap="previewImg" style="width: 686rpx;height: 686rpx;background:#f1f1f1;" canvas-id="mycanvas"/>
+    <button @tap="formSubmit" class="mybtn" type="primary">生成二维码</button>
     更多信息，敬请期待。。。
   </view>
 </template>
 <script>
 import wepy from 'wepy'
+import QR from '@/libs/qrcode.js'
 
 export default class More extends wepy.component {
   components = {
   }
 
   data = {
+    result: '',
+    imagePath: '',
+    placeholder: 'https://github.com/youifree/life-wx'
   }
 
   onLoad() {
     this.$apply()
   }
 
-  async init() {
+  init() {
+    // 页面初始化 options为页面跳转所带来的参数
+    let size = this.setCanvasSize() // 动态设置画布大小
+    let initUrl = this.data.placeholder
+    this.createQrCode(initUrl, 'mycanvas', size.w, size.h)
     this.$apply()
   }
 
+  // 适配不同屏幕大小的canvas
+  setCanvasSize() {
+    let size = {}
+    try {
+      let res = wx.getSystemInfoSync()
+      let scale = 750 / 686 // 不同屏幕下canvas的适配比例；设计稿是750宽
+      let width = res.windowWidth / scale
+      let height = width // canvas画布为正方形
+      size.w = width
+      size.h = height
+    } catch (e) {
+      console.log('获取设备信息失败' + e)
+    }
+    return size
+  }
+
+  createQrCode(url, canvasId, cavW, cavH) {
+    // 调用插件中的draw方法，绘制二维码图片
+    QR.api.draw(url, canvasId, cavW, cavH)
+    setTimeout(() => { this.canvasToTempImage() }, 1000)
+  }
+
+  // 获取临时缓存照片路径，存入data中
+  canvasToTempImage() {
+    let that = this
+    wx.canvasToTempFilePath({
+      canvasId: 'mycanvas',
+      success: function(res) {
+        let tempFilePath = res.tempFilePath
+        that.imagePath = tempFilePath
+        that.$apply()
+      },
+      fail: function(res) {
+        console.log(res)
+      }
+    })
+  }
+
   methods = {
-    // lookMore(title, id) {
-    //   wx.navigateTo({
-    //     url: './movie/more/info'
-    //   })
-    // }
+    scan() {
+      let that = this
+      wx.scanCode({
+        onlyFromCamera: true,
+        success: (res) => {
+          that.result = res.result
+          that.$apply()
+        }
+      })
+    },
+    inputVal(e) {
+      this.result = e.detail.value
+    },
+    // 点击图片进行预览，长按保存分享图片
+    previewImg() {
+      let img = this.imagePath
+      let imgList = []
+      imgList.push(img)
+      wx.previewImage({
+        current: img, // 当前显示图片的http链接
+        urls: imgList // 需要预览的图片http链接列表
+      })
+    },
+    formSubmit(e) {
+      let that = this
+      let url = that.result
+      if (!url) {
+        return
+      }
+      wx.showToast({
+        title: '生成中...',
+        icon: 'loading',
+        duration: 2000
+      })
+      let st = setTimeout(() => {
+        wx.hideToast()
+        let size = that.setCanvasSize()
+        // 绘制二维码
+        that.createQrCode(url, 'mycanvas', size.w, size.h)
+        clearTimeout(st)
+      }, 2000)
+    }
   }
 }
 
