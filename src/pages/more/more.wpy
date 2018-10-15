@@ -8,9 +8,9 @@
     <button @tap="scan()">扫一扫</button>
     <view>
       <label>网址：</label>
-      <input bindinput="inputVal" value="{{result}}" placeholder="{{placeholder}}">
+      <input bindinput="inputVal" value="{{result}}" placeholder="{{placeholder}}" />
     </view>
-    <canvas @tap="previewImg" style="width: 686rpx;height: 686rpx;background:#f1f1f1;" canvas-id="mycanvas"/>
+    <canvas @tap="previewImg" style="width: 686rpx;height: 686rpx;background:#f1f1f1;" canvas-id="mycanvas"></canvas>
     <button @tap="formSubmit" class="mybtn" type="primary">生成二维码</button>
     更多信息，敬请期待。。。
   </view>

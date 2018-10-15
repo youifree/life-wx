@@ -49,6 +49,12 @@
       }
     }
   }
+  .canvas-view {
+    position: absolute;
+    right: 100000px;
+    height: 0;
+    overflow: hidden;
+  }
 }
 </style>
 <template>
@@ -75,6 +81,15 @@
         <button @tap="chooseCity">切换城市</button>
       </view>
       <movie :movieInfo.sync="movieInfo" :type="movieType"></movie>
+    </view>
+    <view><button @tap="toShare" open-type="share">分享</button></view>
+    <view><button @tap="getLocal">获取当前位置</button></view>
+    <view><button @tap="chooseLocal">选择位置</button></view>
+    <!-- <map id="map" longitude="{{longitude}}" latitude="{{latitude}}" scale="14" controls="{{controls}}" bindcontroltap="controltap" markers="{{markers}}" bindmarkertap="markertap" polyline="{{polyline}}" bindregionchange="regionchange" show-location style="width: 100%; height: 300px;"></map> -->
+    <image src="https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=1279186783,1491588347&fm=27&gp=0.jpg"/>
+    <view><button @tap="initImg">生成图片存到手机</button></view>
+    <view class="canvas-view">
+      <canvas canvas-id="firstCanvas" style="width: 750rpx;height: 904px;" disable-scroll="true"></canvas>
     </view>
   </view>
 </template>
@@ -106,13 +121,41 @@ export default class Home extends wepy.component {
       'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3366700795,4035021964&fm=27&gp=0.jpg',
       'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=3749130760,4287706910&fm=27&gp=0.jpg',
       'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1269550404,3170207418&fm=27&gp=0.jpg'
-    ]
+    ],
+    sharePath: '',
+    img1: ''
   }
 
-  onLoad() {
+  onLoad(options) {
     this.weatherService = new WeatherService()
     this.timeMovieService = new TimeMovieService()
+    // wx.downloadFile({
+    //   url: 'https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=1279186783,1491588347&fm=27&gp=0.jpg',
+    //   success: (res) => {
+    //     this.img1 = res.tempFilePath
+    //   }
+    // })
+    console.log(options)
+    if (options && options.title) {
+      wx.showLoading({ title: '页面跳转。。' })
+      wx.redirectTo({
+        url: '../../pages/city/city'
+      })
+    } else {
+      wx.showLoading({ title: '页面跳转。。' })
+    }
     this.$apply()
+  }
+
+  onShareAppMessage() {
+    // var article_id = wx.getStorageSync('current_article_id');
+    return {
+      title: '测试啦啦',
+      path: '/pages/home/home?title=123',
+      success: function (res) {
+        console.log(res)
+      }
+    }
   }
 
   async init() {
@@ -131,11 +174,155 @@ export default class Home extends wepy.component {
     this.$apply()
   }
 
-  // onPullDownRefresh() {
-  //   this.init()
-  // }
+  initMoreImage (context, x, y, width, height, index, tag) {
+    console.log('6--------')
+    wx.getImageInfo({
+      src: this.img1,
+      success: (res) => {
+        let path = res.path
+        let yVal = y - 26
+        context.drawImage(path, x, yVal, width, height)
+        if (index === 0) {
+          this.initMoreImage(context, 16, 392, 116, 100, 1, tag)
+        }
+        if (index === 1) {
+          this.initMoreImage(context, 135, 282, 224, 210, 2, tag)
+        }
+        if (index === 2) {
+          this.initMoreImage(context, 16, 495, 174, 100, 3, tag)
+        }
+        if (index === 3) {
+          this.initMoreImage(context, 193, 495, 166, 100, 4, tag)
+        }
+        if (index === 4) {
+          this.initMoreImage(context, 16, 598, 112, 100, 5, tag)
+        }
+        if (index === 5) {
+          this.initMoreImage(context, 131, 598, 112, 100, 6, tag)
+        }
+        if (index === 6) {
+          this.initMoreImage(context, 247, 598, 112, 100, 7)
+        }
+        if (tag === 8) {
+          return
+        }
+        this.setCard(context)
+        this.$apply()
+      },
+      fail: () => {
+        wx.hideLoading()
+        // this.loadImage = false
+        wx.showToast({ title: '抱歉，图片生成失败，请重新操作', icon: 'none', duration: 3000 })
+      }
+    })
+  }
+
+  // 画8张图
+  setMoreImage (context) {
+    this.initMoreImage(context, 16, 282, 116, 107, 0, 8)
+  }
+  // 画底部二维码
+  setCard (context) {
+    let wechatImgUrl = this.img1
+    console.log('8--------')
+    wx.getImageInfo({
+      src: wechatImgUrl,
+      success: (res) => {
+        let path = res.path
+        context.drawImage(path, 153, 695, 70, 70)
+        context.setFontSize(10)
+        context.setFillStyle('#000')
+        context.fillText('长按识别二维码', 153, 795)
+        context.fillText('可添加他微信', 157, 808)
+        context.stroke()
+        context.closePath()
+        context.draw(false, () => {
+          setTimeout(() => {
+            wx.canvasToTempFilePath({
+              canvasId: 'firstCanvas',
+              success: (res) => {
+                this.sharePath = res.tempFilePath
+                this.saveLongImg()
+                this.$apply()
+              },
+              fail: () => {
+                wx.hideLoading()
+                wx.showToast({ title: '抱歉，图片生成失败，请重新操作', icon: 'none', duration: 3000 })
+              }
+            })
+          }, 3000)
+        })
+      },
+      fail: (err) => {
+        console.log(err)
+        wx.hideLoading()
+        // this.loadImage = false
+        wx.showToast({ title: '抱歉，图片生成失败，请重新操作', icon: 'none', duration: 3000 })
+      }
+    })
+  }
+
+  initLongImg() {
+    // var img1 = this.img1
+    var context = wx.createCanvasContext('firstCanvas')
+    context.setFillStyle('#fff')
+    context.fillRect(0, 176, 375, 704)
+    context.stroke()
+    context.beginPath()
+    context.setFontSize(18)
+    context.setFillStyle('#C8A56F')
+    context.fillText('有你的风景，是我看到最美的景。', 40, 232)
+    context.stroke()
+    context.closePath()
+    this.setMoreImage(context)
+  }
+  saveLongImg () {
+    if (!this.sharePath) {
+      wx.showModal({
+        title: '提示',
+        content: '图片绘制中，请稍后重试',
+        showCancel: false
+      })
+      return
+    }
+    wx.saveImageToPhotosAlbum({
+      filePath: this.sharePath,
+      success: () => {
+        wx.hideLoading()
+        wx.showToast({ title: '保存成功', icon: 'none', duration: 3000 })
+        this.$apply()
+      },
+      fail: () => {
+        wx.hideLoading()
+        wx.showToast({ title: '取消操作', icon: 'none', duration: 3000 })
+      }
+    })
+  }
 
   methods = {
+    // toShare () {},
+    getLocal () {
+      wx.getLocation({
+        type: 'wgs84',
+        success: function(res) {
+          let latitude = res.latitude
+          let longitude = res.longitude
+          console.log(res)
+          wx.openLocation({
+            latitude: latitude,
+            longitude: longitude,
+            scale: 28
+          })
+        }
+      })
+    },
+    chooseLocal () {
+      wx.chooseLocation({
+        success: function(res) {
+          console.log(res)
+        }
+      })
+    },
     lookWeather() {
       wx.navigateTo({
         url: '../../pages/weather/weather'
@@ -144,6 +331,15 @@ export default class Home extends wepy.component {
     chooseCity() {
       wx.navigateTo({
         url: '../../pages/city/city'
+      })
+    },
+    initImg () {
+      wx.downloadFile({
+        url: 'https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=1279186783,1491588347&fm=27&gp=0.jpg',
+        success: (res) => {
+          this.img1 = res.tempFilePath
+          this.initLongImg()
+        }
       })
     }
   }

@@ -146,6 +146,7 @@ export default class Around extends wepy.component {
     that.qqmapsdk.search({
       keyword: keyword,
       success: function (res) {
+        console.log(res)
         that.wxMarkerData = res.data
         that.markers = that.wxMarkerData
         that.latitude = that.wxMarkerData[0].location.lat
@@ -200,6 +201,7 @@ export default class Around extends wepy.component {
         wx.showToast({ title: '请求失败', icon: 'none', duration: 3000 })
       },
       success: function(data) {
+        console.log(data)
         that.bwxMarkerData = data.wxMarkerData
         that.bmarkers = that.bwxMarkerData
         that.lat = that.bwxMarkerData[0].latitude

@@ -160,7 +160,7 @@ export default class SelectCity extends wepy.page {
     chooseCity(item) {
       this.$parent.globalData.defaultCity = item
       wx.navigateTo({
-        url: '../../pages/index/index'
+        url: '../../pages/index/index?titleId=123'
       })
     }
   }
